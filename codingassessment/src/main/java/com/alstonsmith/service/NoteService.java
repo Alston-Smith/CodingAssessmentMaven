@@ -75,6 +75,10 @@ public class NoteService {
         return note;
     }
 
+    public List<User> getUsers() {
+        return new ArrayList<>(users.values());
+    }
+
     public List<Team> getTeams() {
         return new ArrayList<>(teams.values());
     }

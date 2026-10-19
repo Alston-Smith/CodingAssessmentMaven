@@ -36,6 +36,11 @@ public class NoteController {
         return Map.of("status", "UP");
     }
 
+    @GetMapping("/users")
+    public List<User> getUsers() {
+        return noteService.getUsers();
+    }
+
     @PostMapping("/users")
     @ResponseStatus(HttpStatus.CREATED)
     public User createUser(@RequestBody CreateUserRequest request) {

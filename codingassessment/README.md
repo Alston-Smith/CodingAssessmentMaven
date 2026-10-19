@@ -93,6 +93,33 @@ curl -X PUT http://localhost:8080/api/notes/{noteId} \
 curl http://localhost:8080/api/health
 ```
 
+## Desktop GUI
+
+A Swing GUI is included to let a user select an account and team and post a shared message without using raw HTTP requests.
+
+### Run the backend
+
+```bash
+mvn spring-boot:run
+```
+
+### Run the GUI
+
+In your IDE, run the `com.alstonsmith.gui.NoteClientGui` class. If you prefer the command line, build the project first and then run:
+
+```bash
+mvn clean package
+java -cp target/classes com.alstonsmith.gui.NoteClientGui
+```
+
+The GUI will:
+
+- load available users from the backend
+- load available teams from the backend
+- let you choose an account and team
+- let you enter a title and message
+- send the note to the selected team on behalf of the selected user
+
 ## Storage model
 
 This implementation uses in-memory storage for simplicity. All data is reset when the application restarts.
