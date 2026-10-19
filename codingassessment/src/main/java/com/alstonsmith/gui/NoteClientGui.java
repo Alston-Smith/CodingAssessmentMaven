@@ -419,10 +419,10 @@ public class NoteClientGui extends JFrame {
                     });
                 } catch (Exception ex) {
                     String errorMessage = getErrorMessage(ex);
-                    if (errorMessage.contains("Only team members")) {
-                        errorMessage += " Add the selected account to this team before posting.";
-                    }
-                    SwingUtilities.invokeLater(() -> setStatus("Failed to post message: " + errorMessage));
+                    final String displayErrorMessage = errorMessage.contains("Only team members")
+                            ? errorMessage + " Add the selected account to this team before posting."
+                            : errorMessage;
+                    SwingUtilities.invokeLater(() -> setStatus("Failed to post message: " + displayErrorMessage));
                 }
                 return null;
             }
