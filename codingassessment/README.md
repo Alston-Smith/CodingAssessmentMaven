@@ -2,6 +2,20 @@
 
 This project provides a Spring Boot-based note-sharing service for a small group of teams. The backend stores users, teams, and notes, and the included Swing GUI gives a quick desktop workflow for creating records and managing note activity without manually calling the REST API.
 
+## Most time spent on
+- team authentication and user enforcement. (spent time on this to ensure users can't act as others)
+- note funcionality including editing and deleting messages
+- creating a functional gui. (I understand this is out of scope of the assessment but I felt it was important to display a full understanding of the problem and allow for faster testing.)
+
+## To-Do (in order priority)
+- Enforce only team members being able to view team messages. 
+- Enforce only team members being able to view team messages. 
+- Make user roles within teams to allow moderation of messages and managing team join requests.
+- Allow users to ask to be added to a team as well as moderaters to request a user join a team.
+- Add database support so data isn't hosted locally in a json file. 
+- Enforce password rules, email verification, and potentially other ways to authenticate a user.
+- Clean up GUI, as well as setting up a release version instead of one that posts error messages to the users.
+
 ## Current features
 
 ### Backend
