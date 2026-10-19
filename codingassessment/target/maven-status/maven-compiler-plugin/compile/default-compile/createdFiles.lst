@@ -5,6 +5,7 @@ com\alstonsmith\gui\NoteClientGui$1.class
 com\alstonsmith\gui\NoteClientGui$12.class
 com\alstonsmith\dto\CreateNoteRequest.class
 com\alstonsmith\model\User.class
+com\alstonsmith\gui\NoteClientGui$13.class
 com\alstonsmith\gui\NoteClientGui$9.class
 com\alstonsmith\controller\NoteController.class
 com\alstonsmith\gui\NoteClientGui$2.class
@@ -25,6 +26,7 @@ com\alstonsmith\gui\NoteClientGui$5.class
 com\alstonsmith\gui\NoteClientGui$UserOption.class
 com\alstonsmith\dto\AddMemberRequest.class
 com\alstonsmith\dto\UpdateNoteRequest.class
+com\alstonsmith\gui\NoteClientGui$14.class
 com\alstonsmith\gui\NoteClientGui$8.class
 com\alstonsmith\gui\NoteClientGui.class
 com\alstonsmith\gui\NoteClientGui$3.class

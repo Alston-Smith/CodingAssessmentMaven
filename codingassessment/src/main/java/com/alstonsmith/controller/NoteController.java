@@ -50,12 +50,12 @@ public class NoteController {
     }
 
     @GetMapping("/users/{userId}")
-    public User getUser(@PathVariable String userId) {
+    public User getUser(@PathVariable("userId") String userId) {
         return noteService.getUser(userId);
     }
 
     @PostMapping("/users/{userId}/verify-password")
-    public Map<String, Boolean> verifyPassword(@PathVariable String userId, @RequestBody Map<String, String> requestBody) {
+    public Map<String, Boolean> verifyPassword(@PathVariable("userId") String userId, @RequestBody Map<String, String> requestBody) {
         String password = requestBody == null ? null : requestBody.get("password");
         return Map.of("valid", noteService.verifyPasswordForUser(userId, password));
     }
@@ -73,33 +73,33 @@ public class NoteController {
 
     @PostMapping("/teams/{teamId}/members")
     @ResponseStatus(HttpStatus.CREATED)
-    public Team addMember(@PathVariable String teamId, @RequestBody AddMemberRequest request) {
+    public Team addMember(@PathVariable("teamId") String teamId, @RequestBody AddMemberRequest request) {
         return noteService.addMemberToTeam(teamId, request.getUserId());
     }
 
     @GetMapping("/teams/{teamId}/notes")
-    public List<Note> getTeamNotes(@PathVariable String teamId) {
+    public List<Note> getTeamNotes(@PathVariable("teamId") String teamId) {
         return noteService.getTeamNotes(teamId);
     }
 
     @PostMapping("/teams/{teamId}/notes")
     @ResponseStatus(HttpStatus.CREATED)
-    public Note createNote(@PathVariable String teamId, @RequestBody CreateNoteRequest request) {
+    public Note createNote(@PathVariable("teamId") String teamId, @RequestBody CreateNoteRequest request) {
         return noteService.createNote(teamId, request.getUserId(), request.getTitle(), request.getContent());
     }
 
     @GetMapping("/users/{userId}/notes")
-    public List<Note> getVisibleNotes(@PathVariable String userId) {
+    public List<Note> getVisibleNotes(@PathVariable("userId") String userId) {
         return noteService.getVisibleNotesForUser(userId);
     }
 
     @PutMapping("/notes/{noteId}")
-    public Note updateNote(@PathVariable String noteId, @RequestBody UpdateNoteRequest request) {
+    public Note updateNote(@PathVariable("noteId") String noteId, @RequestBody UpdateNoteRequest request) {
         return noteService.updateNote(noteId, request.getUserId(), request.getTitle(), request.getContent());
     }
 
     @DeleteMapping("/notes/{noteId}")
-    public void deleteNote(@PathVariable String noteId, @RequestBody DeleteNoteRequest request) {
+    public void deleteNote(@PathVariable("noteId") String noteId, @RequestBody DeleteNoteRequest request) {
         noteService.deleteNote(noteId, request.getUserId());
     }
 }
