@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -34,7 +35,10 @@ public class NoteClientGui extends JFrame {
     private final JTextField newUserEmailField = new JTextField();
     private final JTextField newTeamNameField = new JTextField();
     private final JTextArea newTeamDescriptionArea = new JTextArea(3, 20);
-    private final JLabel statusLabel = new JLabel("Ready");
+    private final JTextArea statusArea = new JTextArea("Ready\n");
+    private final DefaultListModel<TeamNote> teamNotesModel = new DefaultListModel<>();
+    private final JList<TeamNote> teamNotesList = new JList<>(teamNotesModel);
+    private final JTextArea teamNotesDetailArea = new JTextArea();
 
     private final String baseUrl;
 
@@ -160,9 +164,44 @@ public class NoteClientGui extends JFrame {
         creationPanel.add(createUserPanel);
         creationPanel.add(createTeamPanel);
 
+        JPanel teamOverview = new JPanel(new BorderLayout(8, 8));
+        teamOverview.setBorder(BorderFactory.createTitledBorder("Team Messages"));
+        teamNotesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        teamNotesDetailArea.setEditable(false);
+        teamNotesDetailArea.setLineWrap(true);
+        teamNotesDetailArea.setWrapStyleWord(true);
+        teamNotesDetailArea.setBackground(new Color(250, 250, 250));
+        teamNotesDetailArea.setText("Select a team to view its messages.");
+        teamNotesList.addListSelectionListener(e -> showSelectedTeamNoteDetails());
+
+        JPanel teamNotesPanel = new JPanel(new BorderLayout(8, 8));
+        teamNotesPanel.add(new JScrollPane(teamNotesList), BorderLayout.WEST);
+        teamNotesPanel.add(new JScrollPane(teamNotesDetailArea), BorderLayout.CENTER);
+
+        JPanel teamActions = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton refreshTeamNotesButton = new JButton("Refresh Team Notes");
+        JButton addMemberButton = new JButton("Add Selected User to Team");
+        JButton editMessageButton = new JButton("Edit Selected Message");
+        JButton deleteMessageButton = new JButton("Delete Selected Message");
+        refreshTeamNotesButton.addActionListener(e -> refreshTeamNotes());
+        addMemberButton.addActionListener(e -> addSelectedUserToTeam());
+        editMessageButton.addActionListener(e -> editSelectedMessage());
+        deleteMessageButton.addActionListener(e -> deleteSelectedMessage());
+        teamActions.add(addMemberButton);
+        teamActions.add(refreshTeamNotesButton);
+        teamActions.add(editMessageButton);
+        teamActions.add(deleteMessageButton);
+
+        teamOverview.add(teamActions, BorderLayout.NORTH);
+        teamOverview.add(teamNotesPanel, BorderLayout.CENTER);
+
+        JPanel teamPanel = new JPanel(new BorderLayout(12, 12));
+        teamPanel.add(creationPanel, BorderLayout.NORTH);
+        teamPanel.add(teamOverview, BorderLayout.CENTER);
+
         JPanel container = new JPanel(new BorderLayout(12, 12));
         container.add(form, BorderLayout.CENTER);
-        container.add(creationPanel, BorderLayout.SOUTH);
+        container.add(teamPanel, BorderLayout.SOUTH);
 
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton refreshButton = new JButton("Refresh Lists");
@@ -176,17 +215,44 @@ public class NoteClientGui extends JFrame {
         add(container, BorderLayout.CENTER);
         add(actions, BorderLayout.SOUTH);
 
-        JPanel footer = new JPanel(new BorderLayout());
+        statusArea.setEditable(false);
+        statusArea.setLineWrap(true);
+        statusArea.setWrapStyleWord(true);
+        statusArea.setOpaque(true);
+        statusArea.setBackground(new Color(245, 245, 245));
+
+        JButton copyStatusButton = new JButton("Copy Status");
+        copyStatusButton.addActionListener(e -> copyStatusToClipboard());
+
+        JPanel footer = new JPanel(new BorderLayout(8, 8));
         footer.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
-        footer.add(statusLabel, BorderLayout.CENTER);
+        JScrollPane statusScroll = new JScrollPane(statusArea);
+        statusScroll.setPreferredSize(new Dimension(0, 70));
+        footer.add(statusScroll, BorderLayout.CENTER);
+        footer.add(copyStatusButton, BorderLayout.EAST);
         add(footer, BorderLayout.NORTH);
+
+        userCombo.addActionListener(e -> refreshTeamNotes());
+        teamCombo.addActionListener(e -> refreshTeamNotes());
 
         pack();
         loadSelections();
     }
 
+    private void setStatus(String message) {
+        SwingUtilities.invokeLater(() -> {
+            statusArea.setText(message + "\n");
+            statusArea.setCaretPosition(statusArea.getDocument().getLength());
+        });
+    }
+
+    private void copyStatusToClipboard() {
+        StringSelection selection = new StringSelection(statusArea.getText());
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, selection);
+    }
+
     private void loadSelections() {
-        statusLabel.setText("Loading accounts and teams...");
+        setStatus("Loading accounts and teams...");
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() {
@@ -210,10 +276,11 @@ public class NoteClientGui extends JFrame {
                             teamCombo.setSelectedIndex(0);
                         }
 
-                        statusLabel.setText("Loaded " + usersModel.getSize() + " account(s) and " + teamsModel.getSize() + " team(s)");
+                        setStatus("Loaded " + usersModel.getSize() + " account(s) and " + teamsModel.getSize() + " team(s)");
+                        refreshTeamNotes();
                     });
                 } catch (Exception ex) {
-                    SwingUtilities.invokeLater(() -> statusLabel.setText("Failed to load data: " + ex.getMessage()));
+                    SwingUtilities.invokeLater(() -> setStatus("Failed to load data: " + ex.getMessage()));
                 }
                 return null;
             }
@@ -226,11 +293,11 @@ public class NoteClientGui extends JFrame {
         String email = newUserEmailField.getText() == null ? "" : newUserEmailField.getText().trim();
 
         if (username.isEmpty() || email.isEmpty()) {
-            statusLabel.setText("Please enter both a username and email.");
+            setStatus("Please enter both a username and email.");
             return;
         }
 
-        statusLabel.setText("Creating user...");
+        setStatus("Creating user...");
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() {
@@ -241,9 +308,9 @@ public class NoteClientGui extends JFrame {
                     newUserNameField.setText("");
                     newUserEmailField.setText("");
                     loadSelections();
-                    SwingUtilities.invokeLater(() -> statusLabel.setText("User created: " + username));
+                    SwingUtilities.invokeLater(() -> setStatus("User created: " + username));
                 } catch (Exception ex) {
-                    SwingUtilities.invokeLater(() -> statusLabel.setText("Failed to create user: " + getErrorMessage(ex)));
+                    SwingUtilities.invokeLater(() -> setStatus("Failed to create user: " + getErrorMessage(ex)));
                 }
                 return null;
             }
@@ -256,11 +323,11 @@ public class NoteClientGui extends JFrame {
         String description = newTeamDescriptionArea.getText() == null ? "" : newTeamDescriptionArea.getText().trim();
 
         if (teamName.isEmpty()) {
-            statusLabel.setText("Please enter a team name.");
+            setStatus("Please enter a team name.");
             return;
         }
 
-        statusLabel.setText("Creating team...");
+        setStatus("Creating team...");
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() {
@@ -271,9 +338,39 @@ public class NoteClientGui extends JFrame {
                     newTeamNameField.setText("");
                     newTeamDescriptionArea.setText("");
                     loadSelections();
-                    SwingUtilities.invokeLater(() -> statusLabel.setText("Team created: " + teamName));
+                    SwingUtilities.invokeLater(() -> setStatus("Team created: " + teamName));
                 } catch (Exception ex) {
-                    SwingUtilities.invokeLater(() -> statusLabel.setText("Failed to create team: " + getErrorMessage(ex)));
+                    SwingUtilities.invokeLater(() -> setStatus("Failed to create team: " + getErrorMessage(ex)));
+                }
+                return null;
+            }
+        };
+        worker.execute();
+    }
+
+    private void addSelectedUserToTeam() {
+        final UserOption selectedUser = (UserOption) userCombo.getSelectedItem();
+        final TeamOption selectedTeam = (TeamOption) teamCombo.getSelectedItem();
+
+        if (selectedUser == null || selectedTeam == null) {
+            setStatus("Please select both an account and a team.");
+            return;
+        }
+
+        setStatus("Adding account to team...");
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() {
+                try {
+                    ensureServerAvailable();
+                    postJson("/api/teams/" + selectedTeam.id + "/members", Map.of("userId", selectedUser.id));
+                    SwingUtilities.invokeLater(() -> {
+                        loadSelections();
+                        refreshTeamNotes();
+                        setStatus("Added " + selectedUser.username + " to " + selectedTeam.name + ".");
+                    });
+                } catch (Exception ex) {
+                    SwingUtilities.invokeLater(() -> setStatus("Failed to add user to team: " + getErrorMessage(ex)));
                 }
                 return null;
             }
@@ -282,27 +379,27 @@ public class NoteClientGui extends JFrame {
     }
 
     private void postMessage() {
-        UserOption selectedUser = (UserOption) userCombo.getSelectedItem();
-        TeamOption selectedTeam = (TeamOption) teamCombo.getSelectedItem();
-        String title = titleField.getText() == null ? "" : titleField.getText().trim();
-        String content = contentArea.getText() == null ? "" : contentArea.getText().trim();
+        final UserOption selectedUser = (UserOption) userCombo.getSelectedItem();
+        final TeamOption selectedTeam = (TeamOption) teamCombo.getSelectedItem();
+        final String title = titleField.getText() == null ? "" : titleField.getText().trim();
+        final String content = contentArea.getText() == null ? "" : contentArea.getText().trim();
 
         if (selectedUser == null || selectedTeam == null) {
-            statusLabel.setText("Please select both an account and a team.");
+            setStatus("Please select both an account and a team.");
             return;
         }
 
         if (title.isEmpty()) {
-            statusLabel.setText("Please enter a message title.");
+            setStatus("Please enter a message title.");
             return;
         }
 
         if (content.isEmpty()) {
-            statusLabel.setText("Please enter a message.");
+            setStatus("Please enter a message.");
             return;
         }
 
-        statusLabel.setText("Posting note...");
+        setStatus("Posting note...");
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() {
@@ -317,15 +414,181 @@ public class NoteClientGui extends JFrame {
                     SwingUtilities.invokeLater(() -> {
                         titleField.setText("");
                         contentArea.setText("");
-                        statusLabel.setText("Message posted to " + selectedTeam.name + " by " + selectedUser.username + ".");
+                        refreshTeamNotes();
+                        setStatus("Message posted to " + selectedTeam.name + " by " + selectedUser.username + ".");
                     });
                 } catch (Exception ex) {
-                    SwingUtilities.invokeLater(() -> statusLabel.setText("Failed to post message: " + getErrorMessage(ex)));
+                    String errorMessage = getErrorMessage(ex);
+                    if (errorMessage.contains("Only team members")) {
+                        errorMessage += " Add the selected account to this team before posting.";
+                    }
+                    SwingUtilities.invokeLater(() -> setStatus("Failed to post message: " + errorMessage));
                 }
                 return null;
             }
         };
         worker.execute();
+    }
+
+    private void refreshTeamNotes() {
+        final TeamOption selectedTeam = (TeamOption) teamCombo.getSelectedItem();
+        if (selectedTeam == null) {
+            teamNotesModel.clear();
+            teamNotesDetailArea.setText("Select a team to view its messages.");
+            return;
+        }
+
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() {
+                try {
+                    List<TeamNote> notes = fetchTeamNotes(selectedTeam.id);
+                    SwingUtilities.invokeLater(() -> {
+                        teamNotesModel.clear();
+                        for (TeamNote note : notes) {
+                            teamNotesModel.addElement(note);
+                        }
+                        if (teamNotesModel.isEmpty()) {
+                            teamNotesDetailArea.setText("No messages in this team yet.");
+                            return;
+                        }
+                        teamNotesList.setSelectedIndex(0);
+                        showSelectedTeamNoteDetails();
+                    });
+                } catch (Exception ex) {
+                    SwingUtilities.invokeLater(() -> {
+                        teamNotesModel.clear();
+                        teamNotesDetailArea.setText("Unable to load messages for " + selectedTeam.name + ": " + getErrorMessage(ex));
+                    });
+                }
+                return null;
+            }
+        };
+        worker.execute();
+    }
+
+    private void showSelectedTeamNoteDetails() {
+        TeamNote selectedNote = teamNotesList.getSelectedValue();
+        if (selectedNote == null) {
+            teamNotesDetailArea.setText("Select a message to view details.");
+            return;
+        }
+        teamNotesDetailArea.setText(formatMessage(selectedNote));
+    }
+
+    private void editSelectedMessage() {
+        final UserOption selectedUser = (UserOption) userCombo.getSelectedItem();
+        final TeamNote selectedNote = teamNotesList.getSelectedValue();
+        if (selectedUser == null || selectedNote == null) {
+            setStatus("Please select a user and a message to edit.");
+            return;
+        }
+
+        JTextField titleFieldEditor = new JTextField(selectedNote.title == null ? "" : selectedNote.title);
+        JTextArea contentAreaEditor = new JTextArea(selectedNote.content == null ? "" : selectedNote.content, 8, 40);
+        contentAreaEditor.setLineWrap(true);
+        contentAreaEditor.setWrapStyleWord(true);
+
+        JPanel panel = new JPanel(new BorderLayout(8, 8));
+        panel.add(new JLabel("Title:"), BorderLayout.NORTH);
+        panel.add(titleFieldEditor, BorderLayout.CENTER);
+        panel.add(new JScrollPane(contentAreaEditor), BorderLayout.SOUTH);
+
+        int result = JOptionPane.showConfirmDialog(this, panel, "Edit Team Message", JOptionPane.OK_CANCEL_OPTION);
+        if (result != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        final String newTitle = titleFieldEditor.getText() == null ? "" : titleFieldEditor.getText().trim();
+        final String newContent = contentAreaEditor.getText() == null ? "" : contentAreaEditor.getText().trim();
+        if (newTitle.isBlank() || newContent.isBlank()) {
+            setStatus("Title and message cannot be empty.");
+            return;
+        }
+
+        setStatus("Updating note...");
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() {
+                try {
+                    ensureServerAvailable();
+                    putJson("/api/notes/" + selectedNote.id, Map.of("userId", selectedUser.id, "title", newTitle, "content", newContent));
+                    SwingUtilities.invokeLater(() -> {
+                        refreshTeamNotes();
+                        setStatus("Message updated by " + selectedUser.username + ".");
+                    });
+                } catch (Exception ex) {
+                    SwingUtilities.invokeLater(() -> setStatus("Failed to update message: " + getErrorMessage(ex)));
+                }
+                return null;
+            }
+        };
+        worker.execute();
+    }
+
+    private void deleteSelectedMessage() {
+        final UserOption selectedUser = (UserOption) userCombo.getSelectedItem();
+        final TeamNote selectedNote = teamNotesList.getSelectedValue();
+        if (selectedUser == null || selectedNote == null) {
+            setStatus("Please select a message to delete.");
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Delete the selected message?\n\n" + selectedNote.title,
+                "Delete Message",
+                JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        setStatus("Deleting note...");
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() {
+                try {
+                    ensureServerAvailable();
+                    deleteJson("/api/notes/" + selectedNote.id, Map.of("userId", selectedUser.id));
+                    SwingUtilities.invokeLater(() -> {
+                        refreshTeamNotes();
+                        setStatus("Message deleted by " + selectedUser.username + ".");
+                    });
+                } catch (Exception ex) {
+                    SwingUtilities.invokeLater(() -> setStatus("Failed to delete message: " + getErrorMessage(ex)));
+                }
+                return null;
+            }
+        };
+        worker.execute();
+    }
+
+    private List<TeamNote> fetchTeamNotes(String teamId) throws IOException, InterruptedException {
+        String body = get(baseUrl + "/api/teams/" + teamId + "/notes");
+        return OBJECT_MAPPER.readValue(body, new TypeReference<List<TeamNote>>() {});
+    }
+
+    private String formatMessage(TeamNote note) {
+        if (note == null) {
+            return "No message selected.";
+        }
+
+        StringBuilder builder = new StringBuilder();
+        builder.append("Title: ")
+                .append(note.title == null || note.title.isBlank() ? "(untitled)" : note.title)
+                .append("\n\n");
+        if (note.content != null && !note.content.isBlank()) {
+            builder.append(note.content).append("\n\n");
+        }
+        builder.append("Author: ")
+                .append(note.authorId == null ? "unknown" : note.authorId)
+                .append("\n");
+        if (note.createdAt != null) {
+            builder.append("Created: ").append(note.createdAt).append("\n");
+        }
+        if (note.updatedAt != null && !note.updatedAt.equals(note.createdAt)) {
+            builder.append("Updated: ").append(note.updatedAt).append("\n");
+        }
+        return builder.toString();
     }
 
     private List<UserOption> fetchUsers() throws IOException, InterruptedException {
@@ -351,6 +614,38 @@ public class NoteClientGui extends JFrame {
                 .uri(URI.create(baseUrl + path))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(payload))
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() >= 400) {
+            String responseText = response.body() == null ? "" : response.body();
+            throw new IOException("Server responded with " + response.statusCode() + ": " + responseText);
+        }
+        return response;
+    }
+
+    private HttpResponse<String> putJson(String path, Map<String, String> body) throws IOException, InterruptedException {
+        String payload = OBJECT_MAPPER.writeValueAsString(body);
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + path))
+                .header("Content-Type", "application/json")
+                .PUT(HttpRequest.BodyPublishers.ofString(payload))
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() >= 400) {
+            String responseText = response.body() == null ? "" : response.body();
+            throw new IOException("Server responded with " + response.statusCode() + ": " + responseText);
+        }
+        return response;
+    }
+
+    private HttpResponse<String> deleteJson(String path, Map<String, String> body) throws IOException, InterruptedException {
+        String payload = OBJECT_MAPPER.writeValueAsString(body);
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + path))
+                .header("Content-Type", "application/json")
+                .method("DELETE", HttpRequest.BodyPublishers.ofString(payload))
                 .build();
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -421,6 +716,21 @@ public class NoteClientGui extends JFrame {
         @Override
         public String toString() {
             return name;
+        }
+    }
+
+    public static class TeamNote {
+        public String id;
+        public String title;
+        public String content;
+        public String authorId;
+        public String teamId;
+        public String createdAt;
+        public String updatedAt;
+
+        @Override
+        public String toString() {
+            return (title == null || title.isBlank() ? "(untitled)" : title) + " — " + (authorId == null ? "unknown" : authorId);
         }
     }
 }

@@ -4,12 +4,14 @@ import com.alstonsmith.dto.AddMemberRequest;
 import com.alstonsmith.dto.CreateNoteRequest;
 import com.alstonsmith.dto.CreateTeamRequest;
 import com.alstonsmith.dto.CreateUserRequest;
+import com.alstonsmith.dto.DeleteNoteRequest;
 import com.alstonsmith.dto.UpdateNoteRequest;
 import com.alstonsmith.model.Note;
 import com.alstonsmith.model.Team;
 import com.alstonsmith.model.User;
 import com.alstonsmith.service.NoteService;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -88,5 +90,10 @@ public class NoteController {
     @PutMapping("/notes/{noteId}")
     public Note updateNote(@PathVariable String noteId, @RequestBody UpdateNoteRequest request) {
         return noteService.updateNote(noteId, request.getUserId(), request.getTitle(), request.getContent());
+    }
+
+    @DeleteMapping("/notes/{noteId}")
+    public void deleteNote(@PathVariable String noteId, @RequestBody DeleteNoteRequest request) {
+        noteService.deleteNote(noteId, request.getUserId());
     }
 }

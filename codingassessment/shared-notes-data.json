@@ -1,0 +1,101 @@
+{
+  "users" : [ {
+    "id" : "user-4a2dfe25",
+    "username" : "bob",
+    "email" : "bob@example.com",
+    "teamIds" : [ "team-e0183563" ]
+  }, {
+    "id" : "user-fc7bef09",
+    "username" : "bob",
+    "email" : "bob@example.com",
+    "teamIds" : [ "team-42c5226d" ]
+  }, {
+    "id" : "user-fb68c195",
+    "username" : "alice",
+    "email" : "alice@example.com",
+    "teamIds" : [ "team-cf546e05" ]
+  }, {
+    "id" : "user-0d91a6ee",
+    "username" : "alice",
+    "email" : "alice@example.com",
+    "teamIds" : [ "team-42c5226d" ]
+  }, {
+    "id" : "user-694533f3",
+    "username" : "alice",
+    "email" : "alice@example.com",
+    "teamIds" : [ "team-ada3c8e4" ]
+  }, {
+    "id" : "user-9fca3c80",
+    "username" : "bob",
+    "email" : "bob@example.com",
+    "teamIds" : [ ]
+  }, {
+    "id" : "user-b66c6770",
+    "username" : "bob",
+    "email" : "bob@example.com",
+    "teamIds" : [ ]
+  }, {
+    "id" : "user-cb3612a1",
+    "username" : "alice",
+    "email" : "alice@example.com",
+    "teamIds" : [ "team-732de2c0" ]
+  }, {
+    "id" : "user-4d369917",
+    "username" : "carol",
+    "email" : "carol@example.com",
+    "teamIds" : [ ]
+  }, {
+    "id" : "user-a612e9da",
+    "username" : "carol",
+    "email" : "carol@example.com",
+    "teamIds" : [ ]
+  }, {
+    "id" : "user-eabb1bd3",
+    "username" : "alice",
+    "email" : "alice@example.com",
+    "teamIds" : [ "team-e0183563" ]
+  } ],
+  "teams" : [ {
+    "id" : "team-732de2c0",
+    "name" : "Product",
+    "description" : "Customer-facing planning",
+    "memberIds" : [ "user-cb3612a1" ]
+  }, {
+    "id" : "team-ada3c8e4",
+    "name" : "Engineering",
+    "description" : "Platform",
+    "memberIds" : [ "user-694533f3" ]
+  }, {
+    "id" : "team-e0183563",
+    "name" : "Product",
+    "description" : "Customer-facing planning",
+    "memberIds" : [ "user-4a2dfe25", "user-eabb1bd3" ]
+  }, {
+    "id" : "team-cf546e05",
+    "name" : "Engineering",
+    "description" : "Platform",
+    "memberIds" : [ "user-fb68c195" ]
+  }, {
+    "id" : "team-42c5226d",
+    "name" : "Product",
+    "description" : "Customer-facing planning",
+    "memberIds" : [ "user-fc7bef09", "user-0d91a6ee" ]
+  } ],
+  "notes" : [ {
+    "id" : "note-b9c478f4",
+    "title" : "Release checklist",
+    "content" : "Ship on Friday",
+    "authorId" : "user-eabb1bd3",
+    "teamId" : "team-e0183563",
+    "createdAt" : "2026-10-19T20:19:43.037850400Z",
+    "updatedAt" : "2026-10-19T20:19:43.037850400Z"
+  }, {
+    "id" : "note-b502adeb",
+    "title" : "Release checklist",
+    "content" : "Ship on Friday",
+    "authorId" : "user-0d91a6ee",
+    "teamId" : "team-42c5226d",
+    "createdAt" : "2026-10-19T20:23:58.405018300Z",
+    "updatedAt" : "2026-10-19T20:23:58.405018300Z"
+  } ]
+}
