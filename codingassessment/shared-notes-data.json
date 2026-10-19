@@ -1,5 +1,11 @@
 {
   "users" : [ {
+    "id" : "user-0d17aecb",
+    "username" : "test3",
+    "email" : "test@test",
+    "passwordHash" : "kZAmMOKnSud88opAh2WznsI91q1L59qoWbAZp/yXdBM=",
+    "teamIds" : [ ]
+  }, {
     "id" : "user-193c8bd4",
     "username" : "alice",
     "email" : "alice@example.com",
@@ -28,9 +34,14 @@
     "username" : "test2",
     "email" : "test@test",
     "passwordHash" : "QOOnLsfUNq2P1f/gcul6VaVSqdA2vFec7b9k/nY/K9M=",
-    "teamIds" : [ "team-8ad8b143" ]
+    "teamIds" : [ "team-fabf1f0f", "team-8ad8b143" ]
   } ],
   "teams" : [ {
+    "id" : "team-fabf1f0f",
+    "name" : "test3",
+    "description" : "test3",
+    "memberIds" : [ "user-402f1f4f" ]
+  }, {
     "id" : "team-8ad8b143",
     "name" : "test1",
     "description" : "test1",
