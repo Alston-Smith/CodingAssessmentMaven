@@ -6,8 +6,11 @@ This project provides a Spring Boot-based note-sharing service for a small group
 
 ### Backend
 
-- Create users
-- Create teams
+- Create users with a required password
+- Enforce unique account names and team names (case-insensitive)
+- Encrypt stored account passwords using AES-256
+- Require a selected/logged-in user to create a team
+- Automatically add the creator to any team they create
 - Add users to teams
 - View users and teams
 - Create notes within a team
@@ -22,7 +25,9 @@ This project provides a Spring Boot-based note-sharing service for a small group
 ### GUI
 
 - Select a user and team from the loaded lists
-- Create new users and teams from the desktop UI
+- Create new users with username, email, and password fields
+- Create a team only when an account is selected
+- Team creation automatically adds the currently selected account to the team
 - Add the selected user to the selected team
 - Post a message to the team on behalf of the selected user
 - View messages in the selected team
@@ -67,8 +72,10 @@ curl http://localhost:8080/api/health
 ```bash
 curl -X POST http://localhost:8080/api/users \
   -H "Content-Type: application/json" \
-  -d '{"username":"alice","email":"alice@example.com"}'
+  -d '{"username":"alice","email":"alice@example.com","password":"Password123!"}'
 ```
+
+User account names must be unique, and passwords are stored encrypted with AES-256.
 
 ### Get all users
 
@@ -81,8 +88,10 @@ curl http://localhost:8080/api/users
 ```bash
 curl -X POST http://localhost:8080/api/teams \
   -H "Content-Type: application/json" \
-  -d '{"name":"Product","description":"Customer-facing planning"}'
+  -d '{"name":"Product","description":"Customer-facing planning","userId":"user-12345678"}'
 ```
+
+Team names must be unique and the selected user is automatically added as a member when the team is created.
 
 ### Get all teams
 

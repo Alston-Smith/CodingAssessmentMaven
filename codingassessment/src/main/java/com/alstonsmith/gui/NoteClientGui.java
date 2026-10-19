@@ -33,6 +33,7 @@ public class NoteClientGui extends JFrame {
     private final JTextArea contentArea = new JTextArea(10, 40);
     private final JTextField newUserNameField = new JTextField();
     private final JTextField newUserEmailField = new JTextField();
+    private final JPasswordField newUserPasswordField = new JPasswordField();
     private final JTextField newTeamNameField = new JTextField();
     private final JTextArea newTeamDescriptionArea = new JTextArea(3, 20);
     private final JTextArea statusArea = new JTextArea("Ready\n");
@@ -117,10 +118,19 @@ public class NoteClientGui extends JFrame {
         userGbc.weightx = 1;
         createUserPanel.add(newUserEmailField, userGbc);
 
+        userGbc.gridx = 0;
+        userGbc.gridy = 2;
+        userGbc.weightx = 0;
+        createUserPanel.add(new JLabel("Password:"), userGbc);
+
+        userGbc.gridx = 1;
+        userGbc.weightx = 1;
+        createUserPanel.add(newUserPasswordField, userGbc);
+
         JButton createUserButton = new JButton("Create User");
         createUserButton.addActionListener(e -> createUser());
         userGbc.gridx = 0;
-        userGbc.gridy = 2;
+        userGbc.gridy = 3;
         userGbc.gridwidth = 2;
         userGbc.weightx = 1;
         userGbc.fill = GridBagConstraints.HORIZONTAL;
@@ -153,6 +163,7 @@ public class NoteClientGui extends JFrame {
         createTeamPanel.add(new JScrollPane(newTeamDescriptionArea), teamGbc);
 
         JButton createTeamButton = new JButton("Create Team");
+        createTeamButton.setEnabled(false);
         createTeamButton.addActionListener(e -> createTeam());
         teamGbc.gridx = 0;
         teamGbc.gridy = 2;
@@ -233,7 +244,11 @@ public class NoteClientGui extends JFrame {
         footer.add(copyStatusButton, BorderLayout.EAST);
         add(footer, BorderLayout.NORTH);
 
-        userCombo.addActionListener(e -> refreshTeamNotes());
+        userCombo.addActionListener(e -> {
+            UserOption selectedUser = (UserOption) userCombo.getSelectedItem();
+            createTeamButton.setEnabled(selectedUser != null);
+            refreshTeamNotes();
+        });
         teamCombo.addActionListener(e -> refreshTeamNotes());
 
         pack();
@@ -293,9 +308,10 @@ public class NoteClientGui extends JFrame {
     private void createUser() {
         String username = newUserNameField.getText() == null ? "" : newUserNameField.getText().trim();
         String email = newUserEmailField.getText() == null ? "" : newUserEmailField.getText().trim();
+        String password = new String(newUserPasswordField.getPassword()).trim();
 
-        if (username.isEmpty() || email.isEmpty()) {
-            setStatus("Please enter both a username and email.");
+        if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
+            setStatus("Please enter a username, email, and password.");
             return;
         }
 
@@ -305,10 +321,11 @@ public class NoteClientGui extends JFrame {
             protected Void doInBackground() {
                 try {
                     ensureServerAvailable();
-                    postJson("/api/users", Map.of("username", username, "email", email));
+                    postJson("/api/users", Map.of("username", username, "email", email, "password", password));
 
                     newUserNameField.setText("");
                     newUserEmailField.setText("");
+                    newUserPasswordField.setText("");
                     loadSelections();
                     SwingUtilities.invokeLater(() -> setStatus("User created: " + username));
                 } catch (Exception ex) {
@@ -321,8 +338,14 @@ public class NoteClientGui extends JFrame {
     }
 
     private void createTeam() {
+        UserOption selectedUser = (UserOption) userCombo.getSelectedItem();
         String teamName = newTeamNameField.getText() == null ? "" : newTeamNameField.getText().trim();
         String description = newTeamDescriptionArea.getText() == null ? "" : newTeamDescriptionArea.getText().trim();
+
+        if (selectedUser == null) {
+            setStatus("Please select an account before creating a team.");
+            return;
+        }
 
         if (teamName.isEmpty()) {
             setStatus("Please enter a team name.");
@@ -335,12 +358,12 @@ public class NoteClientGui extends JFrame {
             protected Void doInBackground() {
                 try {
                     ensureServerAvailable();
-                    postJson("/api/teams", Map.of("name", teamName, "description", description));
+                    postJson("/api/teams", Map.of("name", teamName, "description", description, "userId", selectedUser.id));
 
                     newTeamNameField.setText("");
                     newTeamDescriptionArea.setText("");
                     loadSelections();
-                    SwingUtilities.invokeLater(() -> setStatus("Team created: " + teamName));
+                    SwingUtilities.invokeLater(() -> setStatus("Team created: " + teamName + " and added " + selectedUser.username + " to the team."));
                 } catch (Exception ex) {
                     SwingUtilities.invokeLater(() -> setStatus("Failed to create team: " + getErrorMessage(ex)));
                 }

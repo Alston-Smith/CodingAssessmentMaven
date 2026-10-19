@@ -1,220 +1,42 @@
 {
   "users" : [ {
-    "id" : "user-4a2dfe25",
+    "id" : "user-193c8bd4",
+    "username" : "alice",
+    "email" : "alice@example.com",
+    "passwordHash" : "UMkudAHGqCsbI5n1PvAlQC7BHWnIXE7TvZLdZhMr4swTl0ubTb1bFg==",
+    "teamIds" : [ "team-c52065e6" ]
+  }, {
+    "id" : "user-0965f13a",
     "username" : "bob",
     "email" : "bob@example.com",
-    "teamIds" : [ "team-19c4c61e", "team-e0183563" ]
+    "passwordHash" : "cqgjELqb71//Lu0NmZ+19htBh9opjtVa628Q/8QOr9eERuGYZNF5+g==",
+    "teamIds" : [ "team-c52065e6" ]
   }, {
-    "id" : "user-2eb48710",
-    "username" : "bob",
-    "email" : "bob@example.com",
-    "teamIds" : [ ]
-  }, {
-    "id" : "user-9512717f",
-    "username" : "bob",
-    "email" : "bob@example.com",
-    "teamIds" : [ ]
-  }, {
-    "id" : "user-51248a3d",
+    "id" : "user-d416a39f",
     "username" : "carol",
     "email" : "carol@example.com",
+    "passwordHash" : "RJDP3IkY0eokr8ZAHcCcoA0JP+XJe0dTzeF2V7Mz5ahQrk2kBREv/Q==",
     "teamIds" : [ ]
-  }, {
-    "id" : "user-b66c6770",
-    "username" : "bob",
-    "email" : "bob@example.com",
-    "teamIds" : [ ]
-  }, {
-    "id" : "user-1a260565",
-    "username" : "bob",
-    "email" : "bob@example.com",
-    "teamIds" : [ "team-ddfba938" ]
   }, {
     "id" : "user-5f4e1841",
     "username" : "test",
     "email" : "test@test",
+    "passwordHash" : null,
     "teamIds" : [ ]
-  }, {
-    "id" : "user-56f58264",
-    "username" : "carol",
-    "email" : "carol@example.com",
-    "teamIds" : [ ]
-  }, {
-    "id" : "user-eabb1bd3",
-    "username" : "alice",
-    "email" : "alice@example.com",
-    "teamIds" : [ "team-e0183563" ]
-  }, {
-    "id" : "user-2c8bda46",
-    "username" : "bob",
-    "email" : "bob@example.com",
-    "teamIds" : [ "team-19c4c61e" ]
-  }, {
-    "id" : "user-0d91a6ee",
-    "username" : "alice",
-    "email" : "alice@example.com",
-    "teamIds" : [ "team-42c5226d" ]
-  }, {
-    "id" : "user-694533f3",
-    "username" : "alice",
-    "email" : "alice@example.com",
-    "teamIds" : [ "team-ada3c8e4" ]
-  }, {
-    "id" : "user-93ad9369",
-    "username" : "alice",
-    "email" : "alice@example.com",
-    "teamIds" : [ "team-08cee7e9" ]
-  }, {
-    "id" : "user-9fca3c80",
-    "username" : "bob",
-    "email" : "bob@example.com",
-    "teamIds" : [ ]
-  }, {
-    "id" : "user-a612e9da",
-    "username" : "carol",
-    "email" : "carol@example.com",
-    "teamIds" : [ ]
-  }, {
-    "id" : "user-fc7bef09",
-    "username" : "bob",
-    "email" : "bob@example.com",
-    "teamIds" : [ "team-42c5226d" ]
-  }, {
-    "id" : "user-fb68c195",
-    "username" : "alice",
-    "email" : "alice@example.com",
-    "teamIds" : [ "team-cf546e05" ]
-  }, {
-    "id" : "user-9deeae73",
-    "username" : "alice",
-    "email" : "alice@example.com",
-    "teamIds" : [ "team-882a1809" ]
-  }, {
-    "id" : "user-cb3612a1",
-    "username" : "alice",
-    "email" : "alice@example.com",
-    "teamIds" : [ "team-732de2c0" ]
-  }, {
-    "id" : "user-a0b62bd5",
-    "username" : "alice",
-    "email" : "alice@example.com",
-    "teamIds" : [ "team-935da654" ]
-  }, {
-    "id" : "user-2a3ede7b",
-    "username" : "alice",
-    "email" : "alice@example.com",
-    "teamIds" : [ "team-ddfba938" ]
-  }, {
-    "id" : "user-4d369917",
-    "username" : "carol",
-    "email" : "carol@example.com",
-    "teamIds" : [ ]
-  }, {
-    "id" : "user-d78874a9",
-    "username" : "alice",
-    "email" : "alice@example.com",
-    "teamIds" : [ "team-19c4c61e" ]
-  }, {
-    "id" : "user-86aa660a",
-    "username" : "alice",
-    "email" : "alice@example.com",
-    "teamIds" : [ "team-3948d57a" ]
   } ],
   "teams" : [ {
-    "id" : "team-19c4c61e",
+    "id" : "team-c52065e6",
     "name" : "Product",
     "description" : "Customer-facing planning",
-    "memberIds" : [ "user-2c8bda46", "user-4a2dfe25", "user-d78874a9" ]
-  }, {
-    "id" : "team-732de2c0",
-    "name" : "Product",
-    "description" : "Customer-facing planning",
-    "memberIds" : [ "user-cb3612a1" ]
-  }, {
-    "id" : "team-ada3c8e4",
-    "name" : "Engineering",
-    "description" : "Platform",
-    "memberIds" : [ "user-694533f3" ]
-  }, {
-    "id" : "team-935da654",
-    "name" : "Product",
-    "description" : "Customer-facing planning",
-    "memberIds" : [ "user-a0b62bd5" ]
-  }, {
-    "id" : "team-e0183563",
-    "name" : "Product",
-    "description" : "Customer-facing planning",
-    "memberIds" : [ "user-4a2dfe25", "user-eabb1bd3" ]
-  }, {
-    "id" : "team-cf546e05",
-    "name" : "Engineering",
-    "description" : "Platform",
-    "memberIds" : [ "user-fb68c195" ]
-  }, {
-    "id" : "team-ddfba938",
-    "name" : "Product",
-    "description" : "Customer-facing planning",
-    "memberIds" : [ "user-1a260565", "user-2a3ede7b" ]
-  }, {
-    "id" : "team-882a1809",
-    "name" : "Engineering",
-    "description" : "Platform",
-    "memberIds" : [ "user-9deeae73" ]
-  }, {
-    "id" : "team-08cee7e9",
-    "name" : "Product",
-    "description" : "Customer-facing planning",
-    "memberIds" : [ "user-93ad9369" ]
-  }, {
-    "id" : "team-3948d57a",
-    "name" : "Engineering",
-    "description" : "Platform",
-    "memberIds" : [ "user-86aa660a" ]
-  }, {
-    "id" : "team-42c5226d",
-    "name" : "Product",
-    "description" : "Customer-facing planning",
-    "memberIds" : [ "user-fc7bef09", "user-0d91a6ee" ]
+    "memberIds" : [ "user-193c8bd4", "user-0965f13a" ]
   } ],
   "notes" : [ {
-    "id" : "note-b9c478f4",
+    "id" : "note-13907f0b",
     "title" : "Release checklist",
     "content" : "Ship on Friday",
-    "authorId" : "user-eabb1bd3",
-    "teamId" : "team-e0183563",
-    "createdAt" : "2026-10-19T20:19:43.037850400Z",
-    "updatedAt" : "2026-10-19T20:19:43.037850400Z"
-  }, {
-    "id" : "note-03b5ec0c",
-    "title" : "test",
-    "content" : "test edit",
-    "authorId" : "user-4a2dfe25",
-    "teamId" : "team-19c4c61e",
-    "createdAt" : "2026-10-19T20:48:28.391926500Z",
-    "updatedAt" : "2026-10-19T20:48:43.270682700Z"
-  }, {
-    "id" : "note-b502adeb",
-    "title" : "Release checklist",
-    "content" : "Ship on Friday",
-    "authorId" : "user-0d91a6ee",
-    "teamId" : "team-42c5226d",
-    "createdAt" : "2026-10-19T20:23:58.405018300Z",
-    "updatedAt" : "2026-10-19T20:23:58.405018300Z"
-  }, {
-    "id" : "note-62a2feb4",
-    "title" : "Release checklist",
-    "content" : "Ship on Friday",
-    "authorId" : "user-2a3ede7b",
-    "teamId" : "team-ddfba938",
-    "createdAt" : "2026-10-19T20:44:32.742049700Z",
-    "updatedAt" : "2026-10-19T20:44:32.742049700Z"
-  }, {
-    "id" : "note-3e67d752",
-    "title" : "Release checklist",
-    "content" : "Ship on Friday",
-    "authorId" : "user-d78874a9",
-    "teamId" : "team-19c4c61e",
-    "createdAt" : "2026-10-19T20:36:00.134140600Z",
-    "updatedAt" : "2026-10-19T20:36:00.134140600Z"
+    "authorId" : "user-193c8bd4",
+    "teamId" : "team-c52065e6",
+    "createdAt" : "2026-10-19T20:59:29.735015Z",
+    "updatedAt" : "2026-10-19T20:59:29.735015Z"
   } ]
 }

@@ -8,12 +8,22 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.Cipher;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.SecureRandom;
+import java.security.spec.KeySpec;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +38,11 @@ public class NoteService {
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     private static final Path DEFAULT_DATA_FILE = Paths.get(System.getProperty("user.dir"), "shared-notes-data.json");
+    private static final String PASSWORD_SECRET = "SharedNotesServiceKey-32-Bytes-!";
+    private static final byte[] PASSWORD_SALT = new byte[] {
+            14, 22, 37, 8, 91, 15, 44, 3,
+            76, 9, 25, 66, 13, 71, 18, 88
+    };
 
     private final Map<String, User> users = new ConcurrentHashMap<>();
     private final Map<String, Team> teams = new ConcurrentHashMap<>();
@@ -43,31 +58,58 @@ public class NoteService {
         loadData();
     }
 
-    public User createUser(String username, String email) {
+    public User createUser(String username, String email, String password) {
         if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("Username is required");
         }
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("Email is required");
         }
+        if (password == null || password.isBlank()) {
+            throw new IllegalArgumentException("Password is required");
+        }
+
+        String normalizedUsername = normalizeName(username);
+        if (users.values().stream().anyMatch(user -> normalizeName(user.getUsername()).equals(normalizedUsername))) {
+            throw new IllegalArgumentException("Username already exists");
+        }
 
         String id = generateId("user");
-        User user = new User(id, username, email);
+        User user = new User(id, username.trim(), email.trim(), encryptPassword(password));
         users.put(id, user);
         saveData();
         return user;
     }
 
-    public Team createTeam(String name, String description) {
+    public User createUser(String username, String email) {
+        return createUser(username, email, "");
+    }
+
+    public Team createTeam(String name, String description, String creatorUserId) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Team name is required");
         }
+        if (creatorUserId == null || creatorUserId.isBlank()) {
+            throw new IllegalArgumentException("Logged-in user required to create a team");
+        }
+
+        User creator = requireUser(creatorUserId);
+        String normalizedName = normalizeName(name);
+        if (teams.values().stream().anyMatch(team -> normalizeName(team.getName()).equals(normalizedName))) {
+            throw new IllegalArgumentException("Team name already exists");
+        }
 
         String id = generateId("team");
-        Team team = new Team(id, name, description);
+        Team team = new Team(id, name.trim(), description == null ? "" : description.trim());
+        team.getMemberIds().add(creatorUserId);
+        creator.getTeamIds().add(id);
         teams.put(id, team);
         saveData();
         return team;
+    }
+
+    public Team createTeam(String name, String description) {
+        return createTeam(name, description, null);
     }
 
     public Team addMemberToTeam(String teamId, String userId) {
@@ -170,6 +212,23 @@ public class NoteService {
         return requireNote(noteId);
     }
 
+    public boolean verifyPassword(String username, String password) {
+        if (username == null || username.isBlank() || password == null || password.isBlank()) {
+            return false;
+        }
+
+        User user = users.values().stream()
+                .filter(existingUser -> normalizeName(existingUser.getUsername()).equals(normalizeName(username)))
+                .findFirst()
+                .orElse(null);
+
+        if (user == null || user.getPasswordHash() == null || user.getPasswordHash().isBlank()) {
+            return false;
+        }
+
+        return decryptPasswordHash(user.getPasswordHash()).equals(password);
+    }
+
     private boolean isUserAllowedToSeeNote(String userId, Note note) {
         if (note.getAuthorId().equals(userId)) {
             return true;
@@ -262,6 +321,46 @@ public class NoteService {
         } catch (IOException ex) {
             throw new IllegalStateException("Unable to load note data from " + dataFile, ex);
         }
+    }
+
+    private String encryptPassword(String password) {
+        try {
+            byte[] iv = new byte[12];
+            new SecureRandom().nextBytes(iv);
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(deriveKey(), "AES"), new GCMParameterSpec(128, iv));
+            byte[] encrypted = cipher.doFinal(password.getBytes(StandardCharsets.UTF_8));
+            byte[] combined = ByteBuffer.allocate(iv.length + encrypted.length).put(iv).put(encrypted).array();
+            return Base64.getEncoder().encodeToString(combined);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Unable to encrypt password", ex);
+        }
+    }
+
+    private String decryptPasswordHash(String passwordHash) {
+        try {
+            byte[] combined = Base64.getDecoder().decode(passwordHash);
+            byte[] iv = new byte[12];
+            byte[] encrypted = new byte[combined.length - iv.length];
+            System.arraycopy(combined, 0, iv, 0, iv.length);
+            System.arraycopy(combined, iv.length, encrypted, 0, encrypted.length);
+
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(deriveKey(), "AES"), new GCMParameterSpec(128, iv));
+            return new String(cipher.doFinal(encrypted), StandardCharsets.UTF_8);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Unable to decrypt password", ex);
+        }
+    }
+
+    private byte[] deriveKey() throws Exception {
+        KeySpec spec = new PBEKeySpec(PASSWORD_SECRET.toCharArray(), PASSWORD_SALT, 65536, 256);
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+        return factory.generateSecret(spec).getEncoded();
+    }
+
+    private String normalizeName(String value) {
+        return value == null ? "" : value.trim().toLowerCase();
     }
 
     private String generateId(String prefix) {

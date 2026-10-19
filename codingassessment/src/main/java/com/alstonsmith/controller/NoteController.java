@@ -46,7 +46,7 @@ public class NoteController {
     @PostMapping("/users")
     @ResponseStatus(HttpStatus.CREATED)
     public User createUser(@RequestBody CreateUserRequest request) {
-        return noteService.createUser(request.getUsername(), request.getEmail());
+        return noteService.createUser(request.getUsername(), request.getEmail(), request.getPassword());
     }
 
     @GetMapping("/users/{userId}")
@@ -57,7 +57,7 @@ public class NoteController {
     @PostMapping("/teams")
     @ResponseStatus(HttpStatus.CREATED)
     public Team createTeam(@RequestBody CreateTeamRequest request) {
-        return noteService.createTeam(request.getName(), request.getDescription());
+        return noteService.createTeam(request.getName(), request.getDescription(), request.getUserId());
     }
 
     @GetMapping("/teams")

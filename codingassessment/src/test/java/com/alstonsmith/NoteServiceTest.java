@@ -16,16 +16,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NoteServiceTest {
 
+    private NoteService newService() throws IOException {
+        Path tempDir = Files.createTempDirectory("shared-notes-data");
+        return new NoteService(tempDir.resolve("shared-notes-data.json"));
+    }
+
     @Test
-    void teamMembersCanSeeSharedNotesAndNonMembersCannot() {
-        NoteService service = new NoteService();
+    void teamMembersCanSeeSharedNotesAndNonMembersCannot() throws IOException {
+        NoteService service = newService();
 
-        User alice = service.createUser("alice", "alice@example.com");
-        User bob = service.createUser("bob", "bob@example.com");
-        User carol = service.createUser("carol", "carol@example.com");
+        User alice = service.createUser("alice", "alice@example.com", "Password123!");
+        User bob = service.createUser("bob", "bob@example.com", "Password123!");
+        User carol = service.createUser("carol", "carol@example.com", "Password123!");
 
-        Team productTeam = service.createTeam("Product", "Customer-facing planning");
-        service.addMemberToTeam(productTeam.getId(), alice.getId());
+        Team productTeam = service.createTeam("Product", "Customer-facing planning", alice.getId());
         service.addMemberToTeam(productTeam.getId(), bob.getId());
 
         service.createNote(productTeam.getId(), alice.getId(), "Release checklist", "Ship on Friday");
@@ -36,13 +40,13 @@ class NoteServiceTest {
     }
 
     @Test
-    void usersOutsideTheTeamCannotCreateNotes() {
-        NoteService service = new NoteService();
+    void usersOutsideTheTeamCannotCreateNotes() throws IOException {
+        NoteService service = newService();
 
-        User alice = service.createUser("alice", "alice@example.com");
-        User bob = service.createUser("bob", "bob@example.com");
+        User alice = service.createUser("alice", "alice@example.com", "Password123!");
+        User bob = service.createUser("bob", "bob@example.com", "Password123!");
 
-        Team engineering = service.createTeam("Engineering", "Platform");
+        Team engineering = service.createTeam("Engineering", "Platform", alice.getId());
         service.addMemberToTeam(engineering.getId(), alice.getId());
 
         IllegalArgumentException ex = assertThrows(
@@ -59,10 +63,9 @@ class NoteServiceTest {
         Path dataFile = tempDir.resolve("shared-notes-data.json");
 
         NoteService firstService = new NoteService(dataFile);
-        User alice = firstService.createUser("alice", "alice@example.com");
-        User bob = firstService.createUser("bob", "bob@example.com");
-        Team productTeam = firstService.createTeam("Product", "Customer-facing planning");
-        firstService.addMemberToTeam(productTeam.getId(), alice.getId());
+        User alice = firstService.createUser("alice", "alice@example.com", "Password123!");
+        User bob = firstService.createUser("bob", "bob@example.com", "Password123!");
+        Team productTeam = firstService.createTeam("Product", "Customer-facing planning", alice.getId());
         firstService.addMemberToTeam(productTeam.getId(), bob.getId());
         firstService.createNote(productTeam.getId(), alice.getId(), "Release checklist", "Ship on Friday");
 
@@ -75,12 +78,11 @@ class NoteServiceTest {
     }
 
     @Test
-    void noteAuthorCanUpdateAndDeleteTheirOwnMessage() {
-        NoteService service = new NoteService();
+    void noteAuthorCanUpdateAndDeleteTheirOwnMessage() throws IOException {
+        NoteService service = newService();
 
-        User alice = service.createUser("alice", "alice@example.com");
-        Team productTeam = service.createTeam("Product", "Customer-facing planning");
-        service.addMemberToTeam(productTeam.getId(), alice.getId());
+        User alice = service.createUser("alice", "alice@example.com", "Password123!");
+        Team productTeam = service.createTeam("Product", "Customer-facing planning", alice.getId());
 
         Note note = service.createNote(productTeam.getId(), alice.getId(), "Original title", "Original content");
 
@@ -90,5 +92,35 @@ class NoteServiceTest {
 
         service.deleteNote(note.getId(), alice.getId());
         assertTrue(service.getTeamNotes(productTeam.getId()).isEmpty());
+    }
+
+    @Test
+    void duplicateUsernamesAndTeamNamesAreRejected() throws IOException {
+        NoteService service = newService();
+
+        service.createUser("alice", "alice@example.com", "Password123!");
+        IllegalArgumentException duplicateUser = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.createUser("ALICE", "other@example.com", "Password123!")
+        );
+        assertEquals("Username already exists", duplicateUser.getMessage());
+
+        service.createTeam("Product", "Customer-facing planning", service.createUser("bob", "bob@example.com", "Password123!").getId());
+        IllegalArgumentException duplicateTeam = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.createTeam("product", "Other description", service.createUser("carol", "carol@example.com", "Password123!").getId())
+        );
+        assertEquals("Team name already exists", duplicateTeam.getMessage());
+    }
+
+    @Test
+    void userPasswordIsEncryptedAndCanBeValidated() throws IOException {
+        NoteService service = newService();
+
+        User user = service.createUser("alice", "alice@example.com", "Password123!");
+
+        assertTrue(user.getPasswordHash() != null && !user.getPasswordHash().isBlank());
+        assertTrue(service.verifyPassword("alice", "Password123!"));
+        assertTrue(!service.verifyPassword("alice", "WrongPassword"));
     }
 }
