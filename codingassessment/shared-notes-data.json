@@ -4,7 +4,7 @@
     "username" : "test3",
     "email" : "test@test",
     "passwordHash" : "kZAmMOKnSud88opAh2WznsI91q1L59qoWbAZp/yXdBM=",
-    "teamIds" : [ ]
+    "teamIds" : [ "team-fabf1f0f", "team-8ad8b143" ]
   }, {
     "id" : "user-193c8bd4",
     "username" : "alice",
@@ -40,12 +40,12 @@
     "id" : "team-fabf1f0f",
     "name" : "test3",
     "description" : "test3",
-    "memberIds" : [ "user-402f1f4f" ]
+    "memberIds" : [ "user-0d17aecb", "user-402f1f4f" ]
   }, {
     "id" : "team-8ad8b143",
     "name" : "test1",
     "description" : "test1",
-    "memberIds" : [ "user-402f1f4f" ]
+    "memberIds" : [ "user-0d17aecb", "user-402f1f4f" ]
   }, {
     "id" : "team-c52065e6",
     "name" : "Product",
@@ -60,6 +60,14 @@
     "teamId" : "team-c52065e6",
     "createdAt" : "2026-10-19T20:59:29.735015Z",
     "updatedAt" : "2026-10-19T20:59:29.735015Z"
+  }, {
+    "id" : "note-008ff0ff",
+    "title" : "test3",
+    "content" : "test3",
+    "authorId" : "user-402f1f4f",
+    "teamId" : "team-8ad8b143",
+    "createdAt" : "2026-10-19T21:55:11.663282200Z",
+    "updatedAt" : "2026-10-19T21:55:11.663282200Z"
   }, {
     "id" : "note-85cb0c93",
     "title" : "test",

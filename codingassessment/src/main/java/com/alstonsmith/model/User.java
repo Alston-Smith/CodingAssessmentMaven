@@ -3,11 +3,20 @@ package com.alstonsmith.model;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Represents a person who can create teams, join teams, and author notes.
+ * The password hash is stored rather than the raw password for security.
+ */
 public class User {
+    /** Unique account identifier used in API routes and persistence files. */
     private String id;
+    /** Display name the user chooses for their account. */
     private String username;
+    /** Contact email used for account identity and UI display. */
     private String email;
+    /** Encrypted version of the account password. */
     private String passwordHash;
+    /** Teams that this user belongs to so permission checks can be resolved quickly. */
     private Set<String> teamIds = new HashSet<>();
 
     public User() {

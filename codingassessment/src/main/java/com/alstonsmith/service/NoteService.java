@@ -31,8 +31,16 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+/**
+ * Central business logic for the shared notes service.
+ * This service enforces account validation, team membership rules, note author permissions,
+ * duplicate checks, and persistence of the application state.
+ */
 @Service
 public class NoteService {
+    /**
+     * Shared serializer for user, team, and note snapshots written to disk.
+     */
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
             .registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
@@ -44,9 +52,13 @@ public class NoteService {
             76, 9, 25, 66, 13, 71, 18, 88
     };
 
+    /** In-memory catalog of all accounts. */
     private final Map<String, User> users = new ConcurrentHashMap<>();
+    /** In-memory catalog of all teams. */
     private final Map<String, Team> teams = new ConcurrentHashMap<>();
+    /** In-memory catalog of all notes, keyed by their unique note identifier. */
     private final Map<String, Note> notes = new ConcurrentHashMap<>();
+    /** File path used for persistence so data survives application restarts. */
     private final Path dataFile;
 
     public NoteService() {
@@ -58,6 +70,10 @@ public class NoteService {
         loadData();
     }
 
+    /**
+     * Creates a new account after validating input, rejecting duplicates, and
+     * encrypting the password before persistence.
+     */
     public User createUser(String username, String email, String password) {
         if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("Username is required");
@@ -85,6 +101,10 @@ public class NoteService {
         return createUser(username, email, "");
     }
 
+    /**
+     * Creates a new team and automatically adds the creator to the team so the
+     * user can immediately post messages in the group they created.
+     */
     public Team createTeam(String name, String description, String creatorUserId) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Team name is required");
@@ -122,6 +142,9 @@ public class NoteService {
         return team;
     }
 
+    /**
+     * Creates a note after confirming the user is a member of the target team.
+     */
     public Note createNote(String teamId, String userId, String title, String content) {
         Team team = requireTeam(teamId);
         requireUser(userId);
@@ -160,6 +183,10 @@ public class NoteService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Returns all notes visible to the user, including their own notes and notes
+     * from teams they belong to.
+     */
     public List<Note> getVisibleNotesForUser(String userId) {
         requireUser(userId);
 
@@ -212,6 +239,9 @@ public class NoteService {
         return requireNote(noteId);
     }
 
+    /**
+     * Verifies a password using the account username lookup path.
+     */
     public boolean verifyPassword(String username, String password) {
         if (username == null || username.isBlank() || password == null || password.isBlank()) {
             return false;
@@ -229,6 +259,10 @@ public class NoteService {
         return decryptPasswordHash(user.getPasswordHash()).equals(password);
     }
 
+    /**
+     * Verifies a password using the account id, which is the path used by the GUI
+     * after a user selects an account from the dropdown.
+     */
     public boolean verifyPasswordForUser(String userId, String password) {
         if (userId == null || userId.isBlank() || password == null || password.isBlank()) {
             return false;
@@ -275,6 +309,10 @@ public class NoteService {
         return note;
     }
 
+    /**
+     * Persists the current in-memory state to the JSON data file so the service can
+     * reload the same accounts, teams, and notes after a restart.
+     */
     private void saveData() {
         try {
             Path parent = dataFile.getParent();
@@ -291,6 +329,9 @@ public class NoteService {
         }
     }
 
+    /**
+     * Restores the service state from disk when the application starts.
+     */
     private void loadData() {
         if (dataFile == null || !Files.exists(dataFile)) {
             return;

@@ -3,10 +3,18 @@ package com.alstonsmith.model;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Represents a collaboration group. Team membership controls whether a user can
+ * view or post messages in the team.
+ */
 public class Team {
+    /** Unique team identifier used in URLs and persistence storage. */
     private String id;
+    /** Friendly team name shown in the GUI and used for duplicate checks. */
     private String name;
+    /** Optional description that explains the team purpose. */
     private String description;
+    /** Members allowed to read and post notes in this team. */
     private Set<String> memberIds = new HashSet<>();
 
     public Team() {

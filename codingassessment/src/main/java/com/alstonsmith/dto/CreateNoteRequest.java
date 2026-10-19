@@ -1,8 +1,14 @@
 package com.alstonsmith.dto;
 
+/**
+ * Payload for creating a note inside a specific team.
+ */
 public class CreateNoteRequest {
+    /** Account creating the message. */
     private String userId;
+    /** Message title shown in the team list. */
     private String title;
+    /** Main body of the note. */
     private String content;
 
     public String getUserId() {

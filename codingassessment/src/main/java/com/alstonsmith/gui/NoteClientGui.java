@@ -17,7 +17,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Desktop client that talks to the Spring Boot API and lets users select an account,
+ * join teams, and manage shared notes without calling the REST endpoints by hand.
+ */
 public class NoteClientGui extends JFrame {
+    /** JSON mapper that ignores extra fields from the API to keep the GUI flexible. */
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
@@ -47,6 +52,11 @@ public class NoteClientGui extends JFrame {
 
     private final String baseUrl;
 
+    /**
+     * Creates the Swing client for the configured API base URL.
+     *
+     * @param baseUrl the root URL of the backend service, such as http://localhost:8080/api
+     */
     public NoteClientGui(String baseUrl) {
         super("Shared Notes");
         this.baseUrl = baseUrl;
@@ -312,6 +322,9 @@ public class NoteClientGui extends JFrame {
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, selection);
     }
 
+    /**
+     * Pulls the latest user and team data from the backend and repopulates the dropdowns.
+     */
     private void loadSelections() {
         setStatus("Loading accounts and teams...");
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
@@ -354,6 +367,10 @@ public class NoteClientGui extends JFrame {
         return user != null && Boolean.TRUE.equals(verifiedUsers.get(user.id));
     }
 
+    /**
+     * Prompts the user for the selected account password and keeps the authentication
+     * state cached so the user is not re-prompted repeatedly after a successful login.
+     */
     private boolean promptForUserPassword(UserOption user) {
         if (user == null) {
             return false;
@@ -539,6 +556,9 @@ public class NoteClientGui extends JFrame {
         worker.execute();
     }
 
+    /**
+     * Validates account selection and password before sending a new team message.
+     */
     private void postMessage() {
         final UserOption selectedUser = (UserOption) userCombo.getSelectedItem();
         final TeamOption selectedTeam = (TeamOption) teamCombo.getSelectedItem();
@@ -595,6 +615,9 @@ public class NoteClientGui extends JFrame {
         worker.execute();
     }
 
+    /**
+     * Loads the notes for the selected team and updates the detail panel shown in the GUI.
+     */
     private void refreshTeamNotes() {
         final TeamOption selectedTeam = (TeamOption) teamCombo.getSelectedItem();
         if (selectedTeam == null) {

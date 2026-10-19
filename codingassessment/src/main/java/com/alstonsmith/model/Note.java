@@ -2,13 +2,24 @@ package com.alstonsmith.model;
 
 import java.time.Instant;
 
+/**
+ * A message posted inside a team. Notes retain the author, team, and timestamps
+ * so permissions and activity history can be enforced.
+ */
 public class Note {
+    /** Unique note identifier used in REST update/delete routes. */
     private String id;
+    /** Title shown in the GUI list for quick scanning. */
     private String title;
+    /** Main message body written by the author. */
     private String content;
+    /** User who created the note; only the author may update or delete it. */
     private String authorId;
+    /** Team that owns this note. */
     private String teamId;
+    /** When the note was first created. */
     private Instant createdAt;
+    /** When the note was last edited. */
     private Instant updatedAt;
 
     public Note() {
