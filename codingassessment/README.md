@@ -1,22 +1,43 @@
-# Shared Note-Taking Backend
+# Shared Notes Service
 
-This project provides a lightweight Spring Boot backend for a shared note-taking service used by multiple small teams.
+This project provides a Spring Boot-based note-sharing service for a small group of teams. The backend stores users, teams, and notes, and the included Swing GUI gives a quick desktop workflow for creating records and managing note activity without manually calling the REST API.
 
-## Features
+## Current features
+
+### Backend
 
 - Create users
 - Create teams
-- Add members to teams
+- Add users to teams
+- View users and teams
 - Create notes within a team
-- View notes for a team
-- View notes visible to a user
-- Update a note when the user is the author
+- View all notes for a team
+- View all notes visible to a user
+- Update notes when the user is the author
+- Delete notes when the user is the author
+- Restrict team membership rules for note creation and editing
+- Persistent JSON storage across service restarts
+- Health endpoint for basic availability checks
+
+### GUI
+
+- Select a user and team from the loaded lists
+- Create new users and teams from the desktop UI
+- Add the selected user to the selected team
+- Post a message to the team on behalf of the selected user
+- View messages in the selected team
+- Edit selected messages
+- Delete selected messages
+- Copy status messages to the clipboard
+- Display success and failure status updates in the UI
 
 ## Tech stack
 
 - Java 17
 - Spring Boot 3.3.4
 - Maven
+- Jackson JSON support
+- Swing desktop client
 
 ## Run locally
 
@@ -33,7 +54,13 @@ The API will be available at:
 http://localhost:8080
 ```
 
-## API examples
+## API overview
+
+### Health
+
+```bash
+curl http://localhost:8080/api/health
+```
 
 ### Create a user
 
@@ -41,6 +68,12 @@ http://localhost:8080
 curl -X POST http://localhost:8080/api/users \
   -H "Content-Type: application/json" \
   -d '{"username":"alice","email":"alice@example.com"}'
+```
+
+### Get all users
+
+```bash
+curl http://localhost:8080/api/users
 ```
 
 ### Create a team
@@ -51,7 +84,13 @@ curl -X POST http://localhost:8080/api/teams \
   -d '{"name":"Product","description":"Customer-facing planning"}'
 ```
 
-### Add a team member
+### Get all teams
+
+```bash
+curl http://localhost:8080/api/teams
+```
+
+### Add a user to a team
 
 ```bash
 curl -X POST http://localhost:8080/api/teams/{teamId}/members \
@@ -87,39 +126,50 @@ curl -X PUT http://localhost:8080/api/notes/{noteId} \
   -d '{"userId":"user-12345678","title":"Updated release checklist","content":"Ship on Monday"}'
 ```
 
-### Health check
+### Delete a note
 
 ```bash
-curl http://localhost:8080/api/health
+curl -X DELETE http://localhost:8080/api/notes/{noteId} \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"user-12345678"}'
 ```
 
 ## Desktop GUI
 
-A Swing GUI is included to let a user select an account and team and post a shared message without using raw HTTP requests.
+A Swing GUI is included to let users work with accounts, teams, and notes without directly composing HTTP requests.
 
-### Run the backend
+### Start the backend
 
 ```bash
 mvn spring-boot:run
 ```
 
-### Run the GUI
+### Start the GUI
 
-In your IDE, run the `com.alstonsmith.gui.NoteClientGui` class. If you prefer the command line, build the project first and then run:
+Run the class `com.alstonsmith.gui.NoteClientGui` from your IDE or from the command line after building:
 
 ```bash
 mvn clean package
 java -cp target/classes com.alstonsmith.gui.NoteClientGui
 ```
 
-The GUI will:
+The GUI supports:
 
-- load available users from the backend
-- load available teams from the backend
-- let you choose an account and team
-- let you enter a title and message
-- send the note to the selected team on behalf of the selected user
+- listing existing users and teams
+- creating a new user or team
+- selecting an account and team
+- adding the selected user to the selected team
+- posting a note to the team
+- refreshing and viewing team messages
+- editing and deleting the selected message
+- copying status text to the clipboard
 
-## Storage model
+## Data persistence
 
-This implementation uses in-memory storage for simplicity. All data is reset when the application restarts.
+Data is persisted to a local JSON file in the project working directory as `shared-notes-data.json`. This means users, teams, and notes remain available after the service restarts instead of resetting to memory-only state.
+
+## Notes on business rules
+
+- Only team members may create messages in that team.
+- Notes can be edited or deleted only by their original author.
+- The UI uses the selected user and team to submit actions to the REST API.

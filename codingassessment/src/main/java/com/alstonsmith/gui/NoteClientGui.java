@@ -48,7 +48,8 @@ public class NoteClientGui extends JFrame {
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout(12, 12));
-        setPreferredSize(new Dimension(760, 520));
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        setPreferredSize(new Dimension((int) screenSize.getWidth(), (int) screenSize.getHeight()));
         setLocationRelativeTo(null);
 
         JPanel form = new JPanel(new GridBagLayout());
@@ -236,6 +237,7 @@ public class NoteClientGui extends JFrame {
         teamCombo.addActionListener(e -> refreshTeamNotes());
 
         pack();
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         loadSelections();
     }
 
