@@ -13,6 +13,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,10 +37,13 @@ public class NoteClientGui extends JFrame {
     private final JPasswordField newUserPasswordField = new JPasswordField();
     private final JTextField newTeamNameField = new JTextField();
     private final JTextArea newTeamDescriptionArea = new JTextArea(3, 20);
+    private final JButton createTeamButton = new JButton("Create Team");
     private final JTextArea statusArea = new JTextArea("Ready\n");
     private final DefaultListModel<TeamNote> teamNotesModel = new DefaultListModel<>();
     private final JList<TeamNote> teamNotesList = new JList<>(teamNotesModel);
     private final JTextArea teamNotesDetailArea = new JTextArea();
+    private final Map<String, Boolean> verifiedUsers = new HashMap<>();
+    private boolean suppressSelectionEvents = false;
 
     private final String baseUrl;
 
@@ -64,6 +68,18 @@ public class NoteClientGui extends JFrame {
 
         gbc.gridx = 1;
         gbc.weightx = 1;
+        userCombo.setSelectedItem(null);
+        userCombo.setPrototypeDisplayValue(new UserOption());
+        userCombo.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value == null) {
+                    setText("Select an account");
+                }
+                return this;
+            }
+        });
         form.add(userCombo, gbc);
 
         gbc.gridx = 0;
@@ -73,6 +89,18 @@ public class NoteClientGui extends JFrame {
 
         gbc.gridx = 1;
         gbc.weightx = 1;
+        teamCombo.setSelectedItem(null);
+        teamCombo.setPrototypeDisplayValue(new TeamOption());
+        teamCombo.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value == null) {
+                    setText("Select a team");
+                }
+                return this;
+            }
+        });
         form.add(teamCombo, gbc);
 
         gbc.gridx = 0;
@@ -162,7 +190,6 @@ public class NoteClientGui extends JFrame {
         newTeamDescriptionArea.setWrapStyleWord(true);
         createTeamPanel.add(new JScrollPane(newTeamDescriptionArea), teamGbc);
 
-        JButton createTeamButton = new JButton("Create Team");
         createTeamButton.setEnabled(false);
         createTeamButton.addActionListener(e -> createTeam());
         teamGbc.gridx = 0;
@@ -245,11 +272,28 @@ public class NoteClientGui extends JFrame {
         add(footer, BorderLayout.NORTH);
 
         userCombo.addActionListener(e -> {
+            if (suppressSelectionEvents) {
+                return;
+            }
+
             UserOption selectedUser = (UserOption) userCombo.getSelectedItem();
-            createTeamButton.setEnabled(selectedUser != null);
+            if (selectedUser == null) {
+                createTeamButton.setEnabled(false);
+                refreshTeamNotes();
+                return;
+            }
+
+            createTeamButton.setEnabled(isUserVerified(selectedUser));
+            if (!isUserVerified(selectedUser)) {
+                authenticateSelectedUser();
+            }
             refreshTeamNotes();
         });
-        teamCombo.addActionListener(e -> refreshTeamNotes());
+        teamCombo.addActionListener(e -> {
+            if (!suppressSelectionEvents) {
+                refreshTeamNotes();
+            }
+        });
 
         pack();
         setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -277,20 +321,21 @@ public class NoteClientGui extends JFrame {
                     List<UserOption> users = fetchUsers();
                     List<TeamOption> teams = fetchTeams();
                     SwingUtilities.invokeLater(() -> {
-                        usersModel.removeAllElements();
-                        for (UserOption user : users) {
-                            usersModel.addElement(user);
-                        }
-                        if (usersModel.getSize() > 0) {
-                            userCombo.setSelectedIndex(0);
-                        }
+                        suppressSelectionEvents = true;
+                        try {
+                            usersModel.removeAllElements();
+                            for (UserOption user : users) {
+                                usersModel.addElement(user);
+                            }
+                            userCombo.setSelectedItem(null);
 
-                        teamsModel.removeAllElements();
-                        for (TeamOption team : teams) {
-                            teamsModel.addElement(team);
-                        }
-                        if (teamsModel.getSize() > 0) {
-                            teamCombo.setSelectedIndex(0);
+                            teamsModel.removeAllElements();
+                            for (TeamOption team : teams) {
+                                teamsModel.addElement(team);
+                            }
+                            teamCombo.setSelectedItem(null);
+                        } finally {
+                            suppressSelectionEvents = false;
                         }
 
                         setStatus("Loaded " + usersModel.getSize() + " account(s) and " + teamsModel.getSize() + " team(s)");
@@ -303,6 +348,89 @@ public class NoteClientGui extends JFrame {
             }
         };
         worker.execute();
+    }
+
+    private boolean isUserVerified(UserOption user) {
+        return user != null && Boolean.TRUE.equals(verifiedUsers.get(user.id));
+    }
+
+    private boolean promptForUserPassword(UserOption user) {
+        if (user == null) {
+            return false;
+        }
+
+        if (isUserVerified(user)) {
+            return true;
+        }
+
+        JPasswordField passwordField = new JPasswordField();
+        int option = JOptionPane.showConfirmDialog(
+                this,
+                passwordField,
+                "Enter the password for " + user.username,
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (option != JOptionPane.OK_OPTION) {
+            verifiedUsers.remove(user.id);
+            userCombo.setSelectedItem(null);
+            createTeamButton.setEnabled(false);
+            setStatus("Password required to use account " + user.username + ".");
+            return false;
+        }
+
+        String password = new String(passwordField.getPassword()).trim();
+        try {
+            boolean valid = verifyUserPassword(user.id, password);
+            if (!valid) {
+                verifiedUsers.remove(user.id);
+                userCombo.setSelectedItem(null);
+                createTeamButton.setEnabled(false);
+                setStatus("Incorrect password for " + user.username + ".");
+                JOptionPane.showMessageDialog(this, "Incorrect password. Please try again.", "Authentication failed", JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+            verifiedUsers.put(user.id, true);
+            createTeamButton.setEnabled(true);
+            setStatus("Authenticated as " + user.username + ".");
+            return true;
+        } catch (Exception ex) {
+            verifiedUsers.remove(user.id);
+            userCombo.setSelectedItem(null);
+            createTeamButton.setEnabled(false);
+            setStatus("Failed to verify password for " + user.username + ": " + getErrorMessage(ex));
+            return false;
+        }
+    }
+
+    private void authenticateSelectedUser() {
+        UserOption selectedUser = (UserOption) userCombo.getSelectedItem();
+        if (selectedUser == null) {
+            return;
+        }
+        boolean authenticated = promptForUserPassword(selectedUser);
+        createTeamButton.setEnabled(authenticated && selectedUser != null);
+        if (!authenticated) {
+            verifiedUsers.remove(selectedUser.id);
+        }
+    }
+
+    private boolean verifyUserPassword(String userId, String password) throws IOException, InterruptedException {
+        String payload = OBJECT_MAPPER.writeValueAsString(Map.of("password", password));
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/api/users/" + userId + "/verify-password"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(payload))
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() >= 400) {
+            throw new IOException("Server responded with " + response.statusCode() + ": " + response.body());
+        }
+
+        Map<String, Boolean> verification = OBJECT_MAPPER.readValue(response.body(), new TypeReference<Map<String, Boolean>>() {});
+        return Boolean.TRUE.equals(verification.get("valid"));
     }
 
     private void createUser() {
@@ -347,6 +475,10 @@ public class NoteClientGui extends JFrame {
             return;
         }
 
+        if (!promptForUserPassword(selectedUser)) {
+            return;
+        }
+
         if (teamName.isEmpty()) {
             setStatus("Please enter a team name.");
             return;
@@ -382,6 +514,10 @@ public class NoteClientGui extends JFrame {
             return;
         }
 
+        if (!promptForUserPassword(selectedUser)) {
+            return;
+        }
+
         setStatus("Adding account to team...");
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
@@ -411,6 +547,10 @@ public class NoteClientGui extends JFrame {
 
         if (selectedUser == null || selectedTeam == null) {
             setStatus("Please select both an account and a team.");
+            return;
+        }
+
+        if (!promptForUserPassword(selectedUser)) {
             return;
         }
 
@@ -509,6 +649,10 @@ public class NoteClientGui extends JFrame {
             return;
         }
 
+        if (!promptForUserPassword(selectedUser)) {
+            return;
+        }
+
         JTextField titleFieldEditor = new JTextField(selectedNote.title == null ? "" : selectedNote.title);
         JTextArea contentAreaEditor = new JTextArea(selectedNote.content == null ? "" : selectedNote.content, 8, 40);
         contentAreaEditor.setLineWrap(true);
@@ -556,6 +700,10 @@ public class NoteClientGui extends JFrame {
         final TeamNote selectedNote = teamNotesList.getSelectedValue();
         if (selectedUser == null || selectedNote == null) {
             setStatus("Please select a message to delete.");
+            return;
+        }
+
+        if (!promptForUserPassword(selectedUser)) {
             return;
         }
 

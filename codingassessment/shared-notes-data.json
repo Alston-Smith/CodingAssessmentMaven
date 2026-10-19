@@ -23,8 +23,19 @@
     "email" : "test@test",
     "passwordHash" : null,
     "teamIds" : [ ]
+  }, {
+    "id" : "user-402f1f4f",
+    "username" : "test2",
+    "email" : "test@test",
+    "passwordHash" : "QOOnLsfUNq2P1f/gcul6VaVSqdA2vFec7b9k/nY/K9M=",
+    "teamIds" : [ "team-8ad8b143" ]
   } ],
   "teams" : [ {
+    "id" : "team-8ad8b143",
+    "name" : "test1",
+    "description" : "test1",
+    "memberIds" : [ "user-402f1f4f" ]
+  }, {
     "id" : "team-c52065e6",
     "name" : "Product",
     "description" : "Customer-facing planning",
@@ -38,5 +49,21 @@
     "teamId" : "team-c52065e6",
     "createdAt" : "2026-10-19T20:59:29.735015Z",
     "updatedAt" : "2026-10-19T20:59:29.735015Z"
+  }, {
+    "id" : "note-85cb0c93",
+    "title" : "test",
+    "content" : "test edit",
+    "authorId" : "user-402f1f4f",
+    "teamId" : "team-8ad8b143",
+    "createdAt" : "2026-10-19T21:14:40.046058700Z",
+    "updatedAt" : "2026-10-19T21:14:46.108148900Z"
+  }, {
+    "id" : "note-e96cf10e",
+    "title" : "test2",
+    "content" : "test2",
+    "authorId" : "user-402f1f4f",
+    "teamId" : "team-8ad8b143",
+    "createdAt" : "2026-10-19T21:21:32.591436Z",
+    "updatedAt" : "2026-10-19T21:21:32.591436Z"
   } ]
 }

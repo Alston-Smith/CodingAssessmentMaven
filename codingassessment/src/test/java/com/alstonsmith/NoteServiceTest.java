@@ -123,4 +123,14 @@ class NoteServiceTest {
         assertTrue(service.verifyPassword("alice", "Password123!"));
         assertTrue(!service.verifyPassword("alice", "WrongPassword"));
     }
+
+    @Test
+    void passwordCanBeValidatedByUserId() throws IOException {
+        NoteService service = newService();
+
+        User user = service.createUser("alice", "alice@example.com", "Password123!");
+
+        assertTrue(service.verifyPasswordForUser(user.getId(), "Password123!"));
+        assertTrue(!service.verifyPasswordForUser(user.getId(), "WrongPassword"));
+    }
 }

@@ -229,6 +229,19 @@ public class NoteService {
         return decryptPasswordHash(user.getPasswordHash()).equals(password);
     }
 
+    public boolean verifyPasswordForUser(String userId, String password) {
+        if (userId == null || userId.isBlank() || password == null || password.isBlank()) {
+            return false;
+        }
+
+        User user = users.get(userId);
+        if (user == null || user.getPasswordHash() == null || user.getPasswordHash().isBlank()) {
+            return false;
+        }
+
+        return decryptPasswordHash(user.getPasswordHash()).equals(password);
+    }
+
     private boolean isUserAllowedToSeeNote(String userId, Note note) {
         if (note.getAuthorId().equals(userId)) {
             return true;

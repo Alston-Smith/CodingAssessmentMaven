@@ -2,6 +2,7 @@ com\alstonsmith\gui\NoteClientGui$6.class
 com\alstonsmith\dto\CreateUserRequest.class
 com\alstonsmith\gui\NoteClientGui$TeamOption.class
 com\alstonsmith\gui\NoteClientGui$1.class
+com\alstonsmith\gui\NoteClientGui$12.class
 com\alstonsmith\dto\CreateNoteRequest.class
 com\alstonsmith\model\User.class
 com\alstonsmith\gui\NoteClientGui$9.class

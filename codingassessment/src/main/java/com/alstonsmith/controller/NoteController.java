@@ -54,6 +54,12 @@ public class NoteController {
         return noteService.getUser(userId);
     }
 
+    @PostMapping("/users/{userId}/verify-password")
+    public Map<String, Boolean> verifyPassword(@PathVariable String userId, @RequestBody Map<String, String> requestBody) {
+        String password = requestBody == null ? null : requestBody.get("password");
+        return Map.of("valid", noteService.verifyPasswordForUser(userId, password));
+    }
+
     @PostMapping("/teams")
     @ResponseStatus(HttpStatus.CREATED)
     public Team createTeam(@RequestBody CreateTeamRequest request) {
